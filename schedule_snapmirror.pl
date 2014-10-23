@@ -3,7 +3,7 @@
 # --
 # schedule_snapmirror.pl - Reschedule all snapmirror to new cron schedules 
 # https://github.com/aleex42/NetApp-Automation
-# Copyright (C) 2013 Alexander Krogloth, E-Mail: git <at> krogloth.de
+# Copyright (C) 2014 Alexander Krogloth, E-Mail: git <at> krogloth.de
 # --
 # This software comes with ABSOLUTELY NO WARRANTY. For details, see
 # the enclosed file COPYING for license information (GPL). If you
@@ -13,14 +13,17 @@
 use strict;
 use warnings;
 use feature qw/switch/;
-use Data::Dumper;$Data::Dumper::Useqq=1;
 
 # specify new crons, i.e. "daily_0:10, daily_6:10, ..."
 my $new_cron = "^daily_";
 
-my $cluster;
+unless($ARGV[0]){
+    print "ERROR: no cluster specified\n";
+    print "Usage: ./schedule_snapmirror.pl CLUSTER\n";
+    die;
+} 
 
-choose_cluster();
+my $cluster = $ARGV[0];
 
 my @matching_crons = `ssh admin\@$cluster "cron show -fields name" | grep "$new_cron"`;
 my %crons;
@@ -48,26 +51,6 @@ foreach my $snap (@snap_destinations){
 }
 
 sub show_emptiest_cron {
-
 	my @cron_keys = sort { $crons{$a} <=> $crons{$b} } keys(%crons);
-	my @cron_vals = @crons{@cron_keys};
-
 	return $cron_keys[0];
-}
-
-sub choose_cluster {
-
-	print "Cluster?\n";
-	print "(1) na-cl1-nbg4\n";
-	print "(2) na-cl1-nbg6b\n";
-	
-	print "Cluster: ";
-	my $cluster_input = <STDIN>;
-	
-	given($cluster_input){
-	   when(1) { $cluster = "na-cl1-nbg4"; }
-	   when(2) { $cluster = "na-cl1-nbg6b"; }
-	   default { print "Unkown Cluster"; die; }
-	}
-
 }
